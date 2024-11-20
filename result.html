@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Search Results
+{% endblock %}
+
+{% block content %}
+    <h2 class="text-center">Search Results</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Color</th>
+                <th>Gender</th>
+                <th>Price</th>
+                <th>Similarity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td><img src="{{ result.image_url }}" alt="Product Image" style="width: 50px; height: 50px;"></td>
+                <td>{{ result.name }}</td>
+                <td>{{ result.category }}</td>
+                <td>{{ result.color }}</td>
+                <td>{{ result.gender }}</td>
+                <td>$ {{ result.price | round(2) }}</td>
+                <td>{{ (result.similarity * 100) | round(2) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

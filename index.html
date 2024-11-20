@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Fashion Search Engine
+{% endblock %}
+
+{% block content %}
+<header class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Fashion Search Engine</h1>
+</header>
+
+<main class="max-w-7xl mx-auto">
+    <!-- Search Forms -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Text Search -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Text Search</h2>
+            <form id="textSearchForm">
+                <input type="text"
+                       id="textQuery"
+                       class="w-full p-2 border rounded mb-4"
+                       placeholder="Search for products...">
+                <button type="submit"
+                        class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                    Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Image Search -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Image Search</h2>
+            <form id="imageSearchForm">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
+                    <input type="file"
+                           id="imageInput"
+                           accept="image/*">
+                    <label for="imageInput"
+                           class="cursor-pointer block text-center">
+                        Upload an image or drag and drop
+                    </label>
+                </div>
+                <button type="submit"
+                        class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">
+                    Search with Image
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div id="results" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textSearchForm = document.getElementById('textSearchForm');
+        const imageSearchForm = document.getElementById('imageSearchForm');
+        const resultsDiv = document.getElementById('results');
+
+        textSearchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('textQuery').value;
+            if (!query) return;
+
+            const formData = new FormData();
+            formData.append('query', query);
+
+            try {
+                const response = await fetch('/search/text', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayResults(data.results);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during search');
+            }
+        });
+
+        imageSearchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('imageInput');
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/search/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayResults(data.results);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during search');
+            }
+        });
+
+        function displayResults(results) {
+            resultsDiv.innerHTML = results.map(result => `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="${result.image_url}"
+                         alt="${result.name}"
+                         class="w-full h-48 object-cover"
+                         onerror="this.src='https://via.placeholder.com/300x300'">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-2">${result.name}</h3>
+                        <div class="text-sm text-gray-600 mb-2">
+                            <div>${result.category}</div>
+                            <div>${result.gender} · ${result.color}</div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-lg font-bold text-green-600">$${result.price.toFixed(2)}</span>
+                            <span class="text-sm text-gray-500">${(result.similarity * 100).toFixed(1)}% match</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    });
+</script>
+{% endblock %}
